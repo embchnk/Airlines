@@ -1,10 +1,9 @@
-package sample;
+package app;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
 import java.util.ArrayList;
-import java.util.Dictionary;
 import java.util.Hashtable;
 
 // Base class for executing operations on database
@@ -32,6 +31,7 @@ public class Model {
         PreparedStatement preparedStatement = null;
         ResultSet set;
         StringBuilder query = new StringBuilder("select * from " + this.getClass().getSimpleName() + " where ");
+        int i = 0;
         /*
          * Build beginning of query string
          */
@@ -46,7 +46,6 @@ public class Model {
          * Initialize prepared statement and fill ArrayList<Model>
          */
         preparedStatement = conn.prepareStatement(query.toString());
-        int i = 0;
         for (String key : values.keySet()) {
             preparedStatement.setString(++i, values.get(key));
         }
@@ -61,9 +60,45 @@ public class Model {
     }
     /*
      * Insert operation with values we passed, returning created table
+     * INSERT INTO table_name (col1, col2, ...) VALUES (val1, val2, ...) RETURNING *;
      */
-    public Model insert(Hashtable<String, String> values) throws SQLException {
-        return new Model();
+    public Model insert(Hashtable<String, String> values)
+            throws SQLException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Model temp;
+        PreparedStatement preparedStatement;
+        ResultSet set;
+        StringBuilder query = new StringBuilder("insert into " + this.getClass().getSimpleName() + " (");
+        StringBuilder tempStringBuilder = new StringBuilder();
+        int i = 0;
+
+        for (String key : values.keySet()) {
+            query.append(key);
+            query.append(", ");
+            tempStringBuilder.append("?, ");
+        }
+        query.setLength(query.length() - 2);
+        tempStringBuilder.setLength(tempStringBuilder.length() - 2);
+        query.append(") VALUES (");
+        query.append(tempStringBuilder);
+        query.append(") RETURNING *");
+
+        preparedStatement = conn.prepareStatement(query.toString());
+        for (String key : values.keySet()) {
+            preparedStatement.setString(++i, values.get(key));
+        }
+
+        try {
+            set = preparedStatement.executeQuery();
+            temp = this.getClass().getConstructor().newInstance();
+            set.next();
+            temp.setFields(set);
+            System.out.println(query.toString());
+            System.out.println(temp);
+            return temp;
+        } catch (org.postgresql.util.PSQLException e) {
+            // Add information about fact that insert operation wasn't successful (GUI)
+            return null;
+        }
     }
     /*
      * Update operation executed on objects having values passed as first argument
@@ -71,6 +106,12 @@ public class Model {
      */
     public Model[] update(Hashtable<String, String> values, Hashtable<String, String> new_values) throws SQLException {
         return new Model[0];
+    }
+    /*
+     * Delete tables with values passed as argument, return True if operation was successful
+     */
+    public boolean delete(Hashtable<String, String> values) throws SQLException {
+        return true;
     }
     /*
      * Return all fields values with name of the value
@@ -158,13 +199,12 @@ class Company extends Model {
 class RegistrationCode extends Model {
     public int id;
     public String code;
-    public int adminPK;
+    public String login;
 
     public RegistrationCode() {}
 }
 
 class Admin extends Model {
-    public int id;
     public String login;
     public String password;
 

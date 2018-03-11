@@ -1,12 +1,10 @@
-package sample;
+package app;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
-
-import java.util.Dictionary;
 import java.util.Hashtable;
 
 public class Main extends Application {
@@ -36,6 +34,10 @@ public class Main extends Application {
         for (Model m : admins) {
             System.out.println(m);
         }
+        dict.clear();
+        dict.put("login", "test");
+        dict.put("password", "test");
+        (new Admin()).insert(dict);
     }
 
     public void changeScene(String fxml) throws Exception {

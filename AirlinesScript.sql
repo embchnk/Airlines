@@ -1,27 +1,22 @@
 
-CREATE SEQUENCE public.admin_admin_pk_seq;
-
 CREATE TABLE public.admin (
-                admin_pk INTEGER NOT NULL DEFAULT nextval('public.admin_admin_pk_seq'),
                 login VARCHAR NOT NULL,
                 password VARCHAR NOT NULL,
-                CONSTRAINT admin_pk PRIMARY KEY (admin_pk)
+                CONSTRAINT admin_pk PRIMARY KEY (login)
 );
 
 
-ALTER SEQUENCE public.admin_admin_pk_seq OWNED BY public.admin.admin_pk;
+CREATE SEQUENCE public.registrationcode_code_pk_seq;
 
-CREATE SEQUENCE public.registration_code_code_pk_seq;
-
-CREATE TABLE public.registration_code (
-                code_pk INTEGER NOT NULL DEFAULT nextval('public.registration_code_code_pk_seq'),
+CREATE TABLE public.registrationcode (
+                code_pk INTEGER NOT NULL DEFAULT nextval('public.registrationcode_code_pk_seq'),
                 code VARCHAR NOT NULL,
-                admin_pk INTEGER NOT NULL,
+                login VARCHAR NOT NULL,
                 CONSTRAINT code_pk PRIMARY KEY (code_pk)
 );
 
 
-ALTER SEQUENCE public.registration_code_code_pk_seq OWNED BY public.registration_code.code_pk;
+ALTER SEQUENCE public.registrationcode_code_pk_seq OWNED BY public.registrationcode.code_pk;
 
 CREATE SEQUENCE public.airport_airport_pk_seq;
 
@@ -73,21 +68,21 @@ CREATE TABLE public.plane (
 
 ALTER SEQUENCE public.plane_plane_pk_seq OWNED BY public.plane.plane_pk;
 
-CREATE SEQUENCE public.plane_unit_unit_pk_seq;
+CREATE SEQUENCE public.planeunit_unit_pk_seq;
 
-CREATE TABLE public.plane_unit (
-                unit_pk INTEGER NOT NULL DEFAULT nextval('public.plane_unit_unit_pk_seq'),
+CREATE TABLE public.planeunit (
+                unit_pk INTEGER NOT NULL DEFAULT nextval('public.planeunit_unit_pk_seq'),
                 plane_pk INTEGER NOT NULL,
                 company_pk INTEGER NOT NULL,
                 CONSTRAINT unit_pk PRIMARY KEY (unit_pk, plane_pk, company_pk)
 );
 
 
-ALTER SEQUENCE public.plane_unit_unit_pk_seq OWNED BY public.plane_unit.unit_pk;
+ALTER SEQUENCE public.planeunit_unit_pk_seq OWNED BY public.planeunit.unit_pk;
 
-ALTER TABLE public.registration_code ADD CONSTRAINT admin_registration_code_fk
-FOREIGN KEY (admin_pk)
-REFERENCES public.admin (admin_pk)
+ALTER TABLE public.registrationcode ADD CONSTRAINT admin_registration_code_fk
+FOREIGN KEY (login)
+REFERENCES public.admin (login)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
@@ -106,14 +101,14 @@ ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.plane_unit ADD CONSTRAINT company_plane_unit_fk
+ALTER TABLE public.planeunit ADD CONSTRAINT company_plane_unit_fk
 FOREIGN KEY (company_pk)
 REFERENCES public.company (company_pk)
 ON DELETE NO ACTION
 ON UPDATE NO ACTION
 NOT DEFERRABLE;
 
-ALTER TABLE public.plane_unit ADD CONSTRAINT plane_plane_unit_fk
+ALTER TABLE public.planeunit ADD CONSTRAINT plane_plane_unit_fk
 FOREIGN KEY (plane_pk)
 REFERENCES public.plane (plane_pk)
 ON DELETE NO ACTION
