@@ -35,10 +35,24 @@ public class Main extends Application {
         for (Model m : admins) {
             System.out.println(m);
         }
+//        dict.put("capacity", "1000");
+//        dict.put("passengers_number", "1200");
+//        System.out.println((new Plane()).insert(dict));
+
         dict.clear();
         dict.put("login", "test");
         dict.put("password", "test");
         (new Admin()).insert(dict);
+
+        dict.clear();
+        dict.put("model", "Tu-154");
+        dict.put("capacity", "1000");
+        Hashtable<String, String> dict2 = new Hashtable<>();
+        dict2.put("model", "Boeing 272");
+        dict2.put("capacity", "1000");
+        admins = (new Plane()).update(dict, dict2);
+        for (Model m : admins)
+            System.out.println(m);
     }
 
     public void changeScene(String fxml) throws Exception {

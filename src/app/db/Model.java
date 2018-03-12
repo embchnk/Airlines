@@ -1,5 +1,6 @@
 package app.db;
 
+import javax.xml.transform.Result;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.sql.*;
@@ -25,7 +26,6 @@ public class Model {
      */
     public Model[] select(Hashtable<String, String> values)
             throws SQLException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        Model[] returnArray;
         Model temp;
         ArrayList<Model> array = new ArrayList<>();
         PreparedStatement preparedStatement = null;
@@ -35,20 +35,19 @@ public class Model {
         /*
          * Build beginning of query string
          */
-        for (String key : values.keySet()) {
-            query.append(key);
-            query.append(" = ? and ");
-        }
+        for (String key : values.keySet())
+            query.append(key).append(" = ? and ");
+
         // Delete last 'and ' characters
-        query.setLength(query.length() - 4);
+        query.setLength(query.length() - 5);
 
         /*
          * Initialize prepared statement and fill ArrayList<Model>
          */
         preparedStatement = conn.prepareStatement(query.toString());
-        for (String key : values.keySet()) {
+        for (String key : values.keySet())
             preparedStatement.setString(++i, values.get(key));
-        }
+
         set = preparedStatement.executeQuery();
         while (set.next()) {
             temp = this.getClass().getConstructor().newInstance();
@@ -65,15 +64,14 @@ public class Model {
     public Model insert(Hashtable<String, String> values)
             throws SQLException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
         Model temp;
-        PreparedStatement preparedStatement;
+        PreparedStatement preparedStatement = null;
         ResultSet set;
-        StringBuilder query = new StringBuilder("insert into " + this.getClass().getSimpleName() + " (");
+        StringBuilder query = new StringBuilder("insert into ").append(this.getClass().getSimpleName()).append(" (");
         StringBuilder tempStringBuilder = new StringBuilder();
         int i = 0;
 
         for (String key : values.keySet()) {
-            query.append(key);
-            query.append(", ");
+            query.append(key).append(", ");
             tempStringBuilder.append("?, ");
         }
         query.setLength(query.length() - 2);
@@ -83,20 +81,19 @@ public class Model {
         query.append(") RETURNING *");
 
         preparedStatement = conn.prepareStatement(query.toString());
-        for (String key : values.keySet()) {
-            preparedStatement.setString(++i, values.get(key));
-        }
+        for (String key : values.keySet())
+            this.prepareStatement(++i, preparedStatement, key, values.get(key));
+            //  preparedStatement.setString(++i, values.get(key));
 
         try {
             set = preparedStatement.executeQuery();
             temp = this.getClass().getConstructor().newInstance();
             set.next();
             temp.setFields(set);
-            System.out.println(query.toString());
-            System.out.println(temp);
             return temp;
         } catch (org.postgresql.util.PSQLException e) {
             // Add information about fact that insert operation wasn't successful (GUI)
+            System.out.println(e.toString());
             return null;
         }
     }
@@ -104,8 +101,42 @@ public class Model {
      * Update operation executed on objects having values passed as first argument
      * and new values passed as second argument returning all changed tables
      */
-    public Model[] update(Hashtable<String, String> values, Hashtable<String, String> new_values) throws SQLException {
-        return new Model[0];
+    public Model[] update(Hashtable<String, String> values, Hashtable<String, String> new_values)
+            throws SQLException, NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
+        Model temp;
+        ArrayList<Model> array = new ArrayList<>();
+        PreparedStatement preparedStatement = null;
+        ResultSet set;
+        StringBuilder query = new StringBuilder("update ").append(this.getClass().getSimpleName()).append(" set ");
+        int i = 0;
+
+        for (String key : new_values.keySet())
+            query.append(key).append(" = ?, ");
+        query.setLength(query.length() - 2);
+
+        query.append(" where ");
+
+        for (String key : values.keySet())
+            query.append(key).append(" = ? and ");
+        query.setLength(query.length() - 4);
+
+        query.append("RETURNING *");
+
+        preparedStatement = conn.prepareStatement(query.toString());
+        for (String key : new_values.keySet())
+            this.prepareStatement(++i, preparedStatement, key, new_values.get(key));
+        for (String key : values.keySet())
+            this.prepareStatement(++i, preparedStatement, key, values.get(key));
+
+        set = preparedStatement.executeQuery();
+
+        while (set.next()) {
+            temp = this.getClass().getConstructor().newInstance();
+            temp.setFields(set);
+            array.add(temp);
+        }
+
+        return array.toArray(new Model[0]);
     }
     /*
      * Delete tables with values passed as argument, return True if operation was successful
@@ -114,7 +145,7 @@ public class Model {
         return true;
     }
     /*
-     * Return all fields values with name of the value
+     * Return all fields values with name of the value as String
      */
     public String toString() {
         StringBuilder sBuilder = new StringBuilder();
@@ -150,7 +181,25 @@ public class Model {
                 e.printStackTrace();
             }
         }
-
+    }
+    /*
+     * prepare statement
+     */
+    private void prepareStatement(int index, PreparedStatement preparedStatement, String column, String value) {
+        try {
+            Field field = this.getClass().getField(column);
+            if (field.get(this) instanceof Integer) {
+                preparedStatement.setInt(index, Integer.parseInt(value));
+            } else if (field.get(this) instanceof Float) {
+                preparedStatement.setFloat(index, Float.parseFloat(value));
+            } else if (field.get(this) instanceof Timestamp) {
+                preparedStatement.setTimestamp(index, Timestamp.valueOf(value));
+            } else {
+                preparedStatement.setString(index, value);
+            }
+        } catch (NoSuchFieldException | IllegalAccessException | SQLException e) {
+            System.out.println(e.toString());
+        }
     }
 }
 
