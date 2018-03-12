@@ -1,4 +1,4 @@
-package app;
+package app.db;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -20,7 +20,7 @@ public class Model {
 
     public Model() {}
     /*
-     * Select operation, argument in dictionary of values which returned
+     * Select operation, argument is dictionary of values which returned
      * objects should have
      */
     public Model[] select(Hashtable<String, String> values)
@@ -154,59 +154,3 @@ public class Model {
     }
 }
 
-class Plane extends Model {
-    public int id;
-    public String model;
-    public float capacity;
-    public int passengers_number;
-
-    public Plane() {}
-}
-
-class PlaneUnit extends Model {
-    public int id;
-    public int plane_pk;
-    public int company_pk;
-
-    public PlaneUnit() {}
-}
-
-class Airport extends Model {
-    public int id;
-    public String city;
-
-    public Airport() {}
-}
-
-class Flight extends Model {
-    public int id;
-    public int departureAirportPK;
-    public int arrivalAirportPK;
-    public Timestamp departure;
-    public Timestamp arrival;
-    public int reservations;
-
-    public Flight() {}
-}
-
-class Company extends Model {
-    public int id;
-    public String name;
-
-    public Company() {}
-}
-
-class RegistrationCode extends Model {
-    public int id;
-    public String code;
-    public String login;
-
-    public RegistrationCode() {}
-}
-
-class Admin extends Model {
-    public String login;
-    public String password;
-
-    public Admin() {}
-}
