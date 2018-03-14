@@ -46,7 +46,7 @@ public class Model {
          */
         preparedStatement = conn.prepareStatement(query.toString());
         for (String key : values.keySet())
-            preparedStatement.setString(++i, values.get(key));
+            this.prepareStatement(++i, preparedStatement, key, values.get(key));
 
         set = preparedStatement.executeQuery();
         while (set.next()) {
@@ -83,7 +83,6 @@ public class Model {
         preparedStatement = conn.prepareStatement(query.toString());
         for (String key : values.keySet())
             this.prepareStatement(++i, preparedStatement, key, values.get(key));
-            //  preparedStatement.setString(++i, values.get(key));
 
         try {
             set = preparedStatement.executeQuery();
@@ -142,7 +141,26 @@ public class Model {
      * Delete tables with values passed as argument, return True if operation was successful
      */
     public boolean delete(Hashtable<String, String> values) throws SQLException {
-        return true;
+        StringBuilder query = new StringBuilder("delete from ").append(this.getClass().getSimpleName()).append(" where ");
+        PreparedStatement preparedStatement;
+        int i = 0;
+
+        for (String key : values.keySet())
+            query.append(key).append(" = ?").append(" and ");
+        query.setLength(query.length() - 5);
+
+        preparedStatement = conn.prepareStatement(query.toString());
+
+        for (String key : values.keySet())
+            this.prepareStatement(++i, preparedStatement, key, values.get(key));
+
+        try {
+            preparedStatement.executeUpdate();
+            return true;
+        } catch (java.sql.SQLException e) {
+            return false;
+        }
+
     }
     /*
      * Return all fields values with name of the value as String
